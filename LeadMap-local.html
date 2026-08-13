@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Локальный радар потенциальных клиентов из 2ГИС по Кызылорде">
+  <title>LeadMap — лиды из 2ГИС</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080a08;
+      --panel: #111411;
+      --panel-2: #171b17;
+      --line: #282e28;
+      --muted: #8d978e;
+      --text: #f2f5f2;
+      --lime: #b8ff44;
+      --lime-2: #83d90b;
+      --amber: #ffbe55;
+      --red: #ff6b6b;
+      --shadow: 0 22px 70px rgba(0,0,0,.4);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 72% -20%, rgba(184,255,68,.14), transparent 35%),
+        radial-gradient(circle at -10% 100%, rgba(61,105,39,.16), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    .shell { max-width: 1540px; margin: auto; padding: 20px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      padding: 10px 2px 24px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center;
+      border-radius: 12px; background: var(--lime); color: #10150b;
+      font-size: 18px; font-weight: 950; box-shadow: 0 0 30px rgba(184,255,68,.25);
+    }
+    .brand strong { display: block; font-size: 17px; letter-spacing: -.4px; }
+    .brand span { color: var(--muted); font-size: 12px; }
+    .offline {
+      display: inline-flex; align-items: center; gap: 8px; border: 1px solid #33402a;
+      padding: 8px 12px; border-radius: 999px; color: #cfe9b3; background: rgba(184,255,68,.06);
+      font-size: 12px; white-space: nowrap;
+    }
+    .offline::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); }
+
+    .hero {
+      display: grid; grid-template-columns: minmax(0,1.5fr) minmax(300px,.7fr); gap: 16px;
+      margin-bottom: 16px;
+    }
+    .hero-main, .hero-stats, .toolbar, .list-panel, .detail-panel {
+      border: 1px solid var(--line); background: rgba(17,20,17,.9); box-shadow: var(--shadow);
+    }
+    .hero-main { padding: 28px; border-radius: 24px; overflow: hidden; position: relative; }
+    .hero-main::after {
+      content: ""; position: absolute; width: 250px; height: 250px; right: -80px; top: -110px;
+      border: 1px solid rgba(184,255,68,.28); border-radius: 50%; box-shadow: 0 0 0 42px rgba(184,255,68,.025), 0 0 0 84px rgba(184,255,68,.02);
+    }
+    .eyebrow { color: var(--lime); text-transform: uppercase; letter-spacing: 1.8px; font-size: 11px; font-weight: 800; }
+    h1 { margin: 10px 0 12px; max-width: 720px; font-size: clamp(28px,4vw,54px); line-height: .98; letter-spacing: -2.5px; }
+    .hero-main p { margin: 0; max-width: 720px; color: #aab2aa; font-size: 15px; }
+    .hero-meta { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 22px; }
+    .tag { border: 1px solid var(--line); background: #121712; color: #c5cbc5; border-radius: 999px; padding: 7px 10px; font-size: 12px; }
+    .hero-stats { border-radius: 24px; padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat { background: var(--panel-2); border: 1px solid #222822; border-radius: 16px; padding: 15px; min-height: 92px; display: flex; flex-direction: column; justify-content: space-between; }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .stat strong { font-size: 27px; letter-spacing: -1px; }
+    .stat.primary { background: var(--lime); color: #11170a; border-color: var(--lime); }
+    .stat.primary span { color: #40511f; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; padding: 12px; border-radius: 18px; margin-bottom: 16px; }
+    .search { flex: 1; min-width: 200px; position: relative; }
+    .search input, select {
+      width: 100%; color: var(--text); background: #0c0f0c; border: 1px solid var(--line);
+      border-radius: 12px; outline: 0; padding: 11px 13px;
+    }
+    .search input:focus, select:focus { border-color: #5d792e; box-shadow: 0 0 0 3px rgba(184,255,68,.08); }
+    select { width: auto; min-width: 170px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px 13px;
+      background: #151915; cursor: pointer; transition: .18s ease; white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #4c574c; background: #1b201b; }
+    .btn.primary { background: var(--lime); border-color: var(--lime); color: #11170a; font-weight: 850; }
+    .btn.primary:hover { background: #c4ff64; }
+    .btn.ghost { background: transparent; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 14px; }
+    .filter {
+      border: 1px solid var(--line); border-radius: 999px; padding: 8px 12px;
+      color: #aab2aa; background: #101310; cursor: pointer;
+    }
+    .filter.active { color: #10150b; background: var(--lime); border-color: var(--lime); font-weight: 800; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0,1.75fr) minmax(330px,.75fr); gap: 16px; align-items: start; }
+    .list-panel, .detail-panel { border-radius: 20px; overflow: hidden; }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .panel-head strong { font-size: 15px; }
+    .panel-head span { color: var(--muted); font-size: 12px; }
+
+    .lead-list { display: grid; }
+    .lead-row {
+      display: grid; grid-template-columns: 44px minmax(170px,1.3fr) minmax(145px,.8fr) 92px 95px 40px;
+      gap: 12px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #202520;
+      cursor: pointer; transition: .15s ease; position: relative;
+    }
+    .lead-row:last-child { border-bottom: 0; }
+    .lead-row:hover { background: #151915; }
+    .lead-row.selected { background: linear-gradient(90deg, rgba(184,255,68,.1), transparent 70%); }
+    .lead-row.selected::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--lime); }
+    .rank { width: 40px; height: 40px; border: 1px solid #303730; border-radius: 12px; display: grid; place-items: center; color: #bfc7bf; font-weight: 800; }
+    .lead-name { min-width: 0; }
+    .lead-name strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lead-name span, .cell-muted { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .need { color: #d9dfd9; font-size: 12px; }
+    .need b { display: inline-block; margin-bottom: 3px; color: var(--lime); font-weight: 750; }
+    .score { font-size: 20px; font-weight: 900; letter-spacing: -.7px; }
+    .score small { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .status { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #c7cec7; }
+    .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--amber); }
+    .status.hot::before { background: var(--red); box-shadow: 0 0 10px rgba(255,107,107,.5); }
+    .status.watch::before { background: #6b746b; }
+    .save { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border-radius: 10px; }
+    .save.saved { color: var(--lime); border-color: #58742d; background: rgba(184,255,68,.09); }
+    .empty { padding: 60px 24px; color: var(--muted); text-align: center; }
+
+    .detail-panel { position: sticky; top: 16px; }
+    .detail { padding: 18px; }
+    .detail-top { display: flex; justify-content: space-between; gap: 15px; align-items: start; }
+    .detail h2 { margin: 4px 0 3px; font-size: 25px; line-height: 1.05; letter-spacing: -1px; }
+    .category { color: var(--muted); font-size: 12px; }
+    .score-ring { min-width: 66px; height: 66px; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--lime) calc(var(--score)*1%), #293029 0); position: relative; }
+    .score-ring::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--panel); }
+    .score-ring b { z-index: 1; font-size: 19px; }
+    .insight { margin: 18px 0 13px; padding: 14px; border: 1px solid #33402a; border-radius: 14px; background: rgba(184,255,68,.055); color: #dce9cf; font-size: 13px; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+    .fact { padding: 11px; border: 1px solid var(--line); background: #0e110e; border-radius: 12px; min-width: 0; }
+    .fact span { display: block; color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .8px; }
+    .fact b { display: block; margin-top: 5px; font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+    .pitch-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+    .pitch { margin: 8px 0 12px; padding: 13px; background: #0c0f0c; border: 1px solid var(--line); border-radius: 12px; color: #c9cfc9; font-size: 12px; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .actions .wide { grid-column: 1 / -1; }
+    .note { margin-top: 12px; color: #778077; font-size: 10px; line-height: 1.45; }
+    footer { padding: 22px 2px 4px; color: #6f776f; font-size: 11px; display: flex; justify-content: space-between; gap: 15px; }
+    .toast { position: fixed; right: 20px; bottom: 20px; z-index: 10; padding: 11px 14px; background: #efffdb; color: #14200a; border-radius: 12px; font-weight: 750; box-shadow: var(--shadow); transform: translateY(100px); opacity: 0; transition: .25s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 1050px) {
+      .workspace { grid-template-columns: 1fr; }
+      .detail-panel { position: static; }
+      .lead-row { grid-template-columns: 44px minmax(160px,1.4fr) minmax(135px,.8fr) 72px 40px; }
+      .lead-row .status { display: none; }
+    }
+    @media (max-width: 760px) {
+      .shell { padding: 12px; }
+      .topbar { padding: 6px 2px 16px; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-main { padding: 22px; }
+      h1 { letter-spacing: -1.5px; }
+      .toolbar { flex-wrap: wrap; }
+      .search { flex-basis: 100%; }
+      select { flex: 1; }
+      .lead-row { grid-template-columns: 38px minmax(0,1fr) 65px 36px; gap: 9px; padding: 12px; }
+      .rank { width: 36px; height: 36px; }
+      .lead-row .need { display: none; }
+      .score { font-size: 17px; }
+      .offline span { display: none; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">L</div>
+        <div><strong>LeadMap</strong><span>2ГИС · Кызылорда</span></div>
+      </div>
+      <div class="offline"><span>Локально · без входа</span></div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-main">
+        <div class="eyebrow">Радар возможностей</div>
+        <h1>Бизнесы, которым пора продавать через сайт</h1>
+        <p>Приоритетная база компаний из 2ГИС без сайта или с потенциалом внедрения CRM. Откройте карточку точки и сразу напишите владельцу.</p>
+        <div class="hero-meta">
+          <span class="tag">Кызылорда</span><span class="tag">Авто · мебель · красота</span><span class="tag">Проверено вручную</span>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="stat primary"><span>Найдено лидов</span><strong id="statTotal">12</strong></div>
+        <div class="stat"><span>Горячие</span><strong id="statHot">6</strong></div>
+        <div class="stat"><span>Без сайта</span><strong id="statSite">9</strong></div>
+        <div class="stat"><span>Нужна CRM</span><strong id="statCrm">5</strong></div>
+      </div>
+    </section>
+
+    <section class="toolbar" aria-label="Поиск и экспорт">
+      <div class="search"><input id="search" type="search" placeholder="Поиск по компании, категории или адресу…" autocomplete="off"></div>
+      <select id="sort" aria-label="Сортировка">
+        <option value="score">Сначала перспективные</option>
+        <option value="rating">По рейтингу</option>
+        <option value="reviews">По отзывам</option>
+      </select>
+      <button class="btn" id="exportBtn" type="button">↓ Экспорт CSV</button>
+    </section>
+
+    <nav class="filters" aria-label="Фильтры">
+      <button class="filter active" data-filter="all">Все лиды</button>
+      <button class="filter" data-filter="hot">Горячие</button>
+      <button class="filter" data-filter="site">Нужен сайт</button>
+      <button class="filter" data-filter="crm">Нужна CRM</button>
+      <button class="filter" data-filter="saved">Сохранённые</button>
+    </nav>
+
+    <section class="workspace">
+      <div class="list-panel">
+        <div class="panel-head"><strong>Приоритетные компании</strong><span id="resultCount">12 результатов</span></div>
+        <div class="lead-list" id="leadList"></div>
+      </div>
+
+      <aside class="detail-panel" id="detailPanel">
+        <div class="panel-head"><strong>Карточка лида</strong><span>точка в 2ГИС</span></div>
+        <div class="detail" id="detail"></div>
+      </aside>
+    </section>
+
+    <footer>
+      <span>LeadMap · автономная версия, данные хранятся только в вашем браузере</span>
+      <span>Перед отправкой сообщения проверьте актуальность контактов в 2ГИС</span>
+    </footer>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const leads = [
+      {id:1,name:"AutoMaster",category:"Автосервис",address:"ул. Жалела Кизатова, 24",rating:4.8,reviews:143,score:96,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"77775601717",gis:"https://2gis.kz/kyzylorda/firm/70000001069481314",opportunity:"У вас высокий рейтинг и много отзывов — сайт с онлайн-записью и CRM поможет превратить спрос из 2ГИС в повторные продажи."},
+      {id:2,name:"Nns",category:"Салон красоты",address:"ул. Текей батыра, 11Б",rating:4.3,reviews:98,score:94,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"77777020299",gis:"https://2gis.kz/kyzylorda/firm/70000001103644266",opportunity:"Поток отзывов уже подтверждает спрос. Лендинг, онлайн-запись и база клиентов помогут загрузить свободные окна."},
+      {id:3,name:"Sultan service",category:"Автосервис",address:"ул. Пушкина, 1",rating:4.8,reviews:80,score:92,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"77710899191",gis:"https://2gis.kz/kyzylorda/firm/70000001063317160",opportunity:"Сильная репутация даёт хороший поток. CRM поможет вести заявки, напоминать о ТО и возвращать клиентов."},
+      {id:4,name:"Alexey Mebel",category:"Мебель на заказ",address:"ул. Есетова, 63",rating:4.0,reviews:24,score:91,status:"hot",need:"Сайт",site:false,crm:false,whatsapp:"77714801999",gis:"https://2gis.kz/kyzylorda/firm/70000001066583590",opportunity:"Для мебели важны портфолио и расчёт стоимости. Сайт-каталог сможет собирать заявки из поиска круглосуточно."},
+      {id:5,name:"Abusaif",category:"Автосервис",address:"ул. Абдрахманова, 77",rating:null,reviews:0,score:89,status:"hot",need:"Сайт",site:false,crm:false,whatsapp:"77771374113",gis:"https://2gis.kz/kyzylorda/firm/70000001101198024",opportunity:"Карточке не хватает доверия и понятной витрины услуг. Посадочная страница поможет показать цены, работы и гарантии."},
+      {id:6,name:"MOFHome Collection",category:"Мебельный салон",address:"Кызылорда",rating:5.0,reviews:20,score:85,status:"warm",need:"CRM",site:true,crm:true,whatsapp:"77010659955",gis:"https://2gis.kz/kyzylorda/firm/70000001082811063",opportunity:"Сайт уже есть — следующий рост даст CRM: единая воронка заявок, контроль менеджеров и повторные касания."},
+      {id:7,name:"Studio one",category:"Салон красоты",address:"мкр. Шугыла, 53",rating:5.0,reviews:41,score:88,status:"warm",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/kyzylorda/firm/70000001110554058",opportunity:"Идеальный рейтинг можно усилить сайтом с услугами и записью. Контакт доступен прямо в карточке 2ГИС."},
+      {id:8,name:"Adi Mebel Kzo",category:"Мебель на заказ",address:"ул. Балдырган, 1а",rating:4.9,reviews:11,score:84,status:"warm",need:"Сайт",site:false,crm:false,whatsapp:"77774558086",gis:"https://2gis.kz/kyzylorda/firm/70000001080628801",opportunity:"Небольшой, но сильный рейтинг. Сайт-портфолио поможет визуально продавать проекты и собирать замеры."},
+      {id:9,name:"Er-Adl",category:"Автосервис",address:"ул. Билиса Нурпеисова, 1а",rating:4.9,reviews:144,score:93,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"77758341777",gis:"https://2gis.kz/kyzylorda/firm/70000001085621931",opportunity:"144 отзыва — сигнал большого потока. CRM поможет не терять обращения и автоматизировать повторный сервис."},
+      {id:10,name:"Khan mebel",category:"Мебель на заказ",address:"ул. Жаппасбай батыра, 54",rating:3.1,reviews:4,score:75,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77770101771",gis:"https://2gis.kz/kyzylorda/firm/70000001088212540",opportunity:"Сайт с реальными кейсами, гарантиями и этапами работы поможет повысить доверие до первого звонка."},
+      {id:11,name:"Konis",category:"Мебельный салон",address:"Кызылорда",rating:null,reviews:0,score:73,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77011121980",gis:"https://2gis.kz/kyzylorda/firm/70000001103410170",opportunity:"У компании пока слабый цифровой след. Компактный сайт станет основной точкой доверия и сбора заявок."},
+      {id:12,name:"Grace",category:"Салон красоты",address:"ул. Ауэзова, 7а",rating:5.0,reviews:3,score:71,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77771163377",gis:"https://2gis.kz/kyzylorda/firm/70000001109985096",opportunity:"Высокая оценка и небольшое число отзывов — хороший момент запустить сайт, запись и системный сбор обратной связи."}
+    ];
+
+    let currentFilter = "all";
+    let selectedId = leads[0].id;
+    const saved = new Set(JSON.parse(localStorage.getItem("leadmap-saved") || "[]"));
+    const listEl = document.getElementById("leadList");
+    const detailEl = document.getElementById("detail");
+    const searchEl = document.getElementById("search");
+    const sortEl = document.getElementById("sort");
+
+    const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
+    const statusLabel = status => ({hot:"Горячий",warm:"Тёплый",watch:"Наблюдение"})[status];
+    const pitchFor = lead => `Здравствуйте! Заметили ${lead.name} в 2ГИС. ${lead.opportunity} Можем показать короткий прототип без обязательств. Когда будет удобно обсудить?`;
+
+    function filteredLeads() {
+      const query = searchEl.value.trim().toLowerCase();
+      const result = leads.filter(lead => {
+        const textMatch = [lead.name,lead.category,lead.address,lead.need].join(" ").toLowerCase().includes(query);
+        const filterMatch = currentFilter === "all" ||
+          (currentFilter === "hot" && lead.status === "hot") ||
+          (currentFilter === "site" && !lead.site) ||
+          (currentFilter === "crm" && lead.crm) ||
+          (currentFilter === "saved" && saved.has(lead.id));
+        return textMatch && filterMatch;
+      });
+      return result.sort((a,b) => {
+        if (sortEl.value === "rating") return (b.rating || 0) - (a.rating || 0);
+        if (sortEl.value === "reviews") return b.reviews - a.reviews;
+        return b.score - a.score;
+      });
+    }
+
+    function renderList() {
+      const result = filteredLeads();
+      document.getElementById("resultCount").textContent = `${result.length} ${result.length === 1 ? "результат" : "результатов"}`;
+      if (!result.length) {
+        listEl.innerHTML = '<div class="empty">Ничего не найдено. Измените фильтр или запрос.</div>';
+        return;
+      }
+      if (!result.some(lead => lead.id === selectedId)) selectedId = result[0].id;
+      listEl.innerHTML = result.map((lead,index) => `
+        <article class="lead-row ${lead.id === selectedId ? "selected" : ""}" data-id="${lead.id}">
+          <div class="rank">${String(index + 1).padStart(2,"0")}</div>
+          <div class="lead-name"><strong>${escapeHtml(lead.name)}</strong><span>${escapeHtml(lead.category)} · ${escapeHtml(lead.address)}</span></div>
+          <div class="need"><b>${escapeHtml(lead.need)}</b><span class="cell-muted">★ ${lead.rating ?? "—"} · ${lead.reviews} отзывов</span></div>
+          <div class="score">${lead.score}<small>/100</small></div>
+          <div class="status ${lead.status}">${statusLabel(lead.status)}</div>
+          <button class="btn save ${saved.has(lead.id) ? "saved" : ""}" data-save="${lead.id}" title="Сохранить лид" aria-label="Сохранить ${escapeHtml(lead.name)}">${saved.has(lead.id) ? "★" : "☆"}</button>
+        </article>`).join("");
+      renderDetail();
+    }
+
+    function renderDetail() {
+      const lead = leads.find(item => item.id === selectedId) || leads[0];
+      const pitch = pitchFor(lead);
+      detailEl.innerHTML = `
+        <div class="detail-top">
+          <div><div class="eyebrow">${statusLabel(lead.status)} лид</div><h2>${escapeHtml(lead.name)}</h2><div class="category">${escapeHtml(lead.category)}</div></div>
+          <div class="score-ring" style="--score:${lead.score}"><b>${lead.score}</b></div>
+        </div>
+        <div class="insight">${escapeHtml(lead.opportunity)}</div>
+        <div class="facts">
+          <div class="fact"><span>Нужно</span><b>${escapeHtml(lead.need)}</b></div>
+          <div class="fact"><span>Рейтинг</span><b>${lead.rating ? `★ ${lead.rating} · ${lead.reviews}` : "Нет данных"}</b></div>
+          <div class="fact"><span>Адрес</span><b title="${escapeHtml(lead.address)}">${escapeHtml(lead.address)}</b></div>
+          <div class="fact"><span>Контакт</span><b>${lead.whatsapp ? "+" + lead.whatsapp : "В карточке 2ГИС"}</b></div>
+        </div>
+        <div class="pitch-label">Готовое первое сообщение</div>
+        <div class="pitch">${escapeHtml(pitch)}</div>
+        <div class="actions">
+          <a class="btn primary wide" href="${lead.whatsapp ? `https://wa.me/${lead.whatsapp}?text=${encodeURIComponent(pitch)}` : lead.gis}" target="_blank" rel="noopener">${lead.whatsapp ? "Написать лиду в WhatsApp ↗" : "Открыть контакты в 2ГИС ↗"}</a>
+          <a class="btn" href="${lead.gis}" target="_blank" rel="noopener">Точка в 2ГИС ↗</a>
+          <button class="btn" type="button" data-copy="${lead.id}">Копировать текст</button>
+          <button class="btn ghost wide save ${saved.has(lead.id) ? "saved" : ""}" type="button" data-save="${lead.id}">${saved.has(lead.id) ? "★ Лид сохранён" : "☆ Сохранить лид"}</button>
+        </div>
+        <div class="note">Контакты взяты из открытых карточек компаний. Используйте персональное обращение и соблюдайте правила площадки и местное законодательство.</div>`;
+    }
+
+    function toggleSaved(id) {
+      saved.has(id) ? saved.delete(id) : saved.add(id);
+      localStorage.setItem("leadmap-saved", JSON.stringify([...saved]));
+      showToast(saved.has(id) ? "Лид сохранён" : "Лид удалён из сохранённых");
+      renderList();
+    }
+
+    async function copyPitch(id) {
+      const lead = leads.find(item => item.id === id);
+      const text = pitchFor(lead);
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) {
+        const area = document.createElement("textarea"); area.value = text; document.body.appendChild(area); area.select(); document.execCommand("copy"); area.remove();
+      }
+      showToast("Сообщение скопировано");
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message; toast.classList.add("show");
+      clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function exportCsv() {
+      const rows = [["Компания","Категория","Адрес","Рейтинг","Отзывы","Приоритет","Потребность","WhatsApp","2ГИС"]];
+      filteredLeads().forEach(lead => rows.push([lead.name,lead.category,lead.address,lead.rating ?? "",lead.reviews,lead.score,lead.need,lead.whatsapp ? "+"+lead.whatsapp : "",lead.gis]));
+      const csv = "\ufeff" + rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+      const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); link.download = "leadmap-kyzylorda.csv"; link.click(); URL.revokeObjectURL(link.href);
+      showToast("CSV-файл подготовлен");
+    }
+
+    document.querySelector(".filters").addEventListener("click", event => {
+      const button = event.target.closest("[data-filter]"); if (!button) return;
+      currentFilter = button.dataset.filter;
+      document.querySelectorAll(".filter").forEach(item => item.classList.toggle("active", item === button));
+      renderList();
+    });
+    listEl.addEventListener("click", event => {
+      const saveButton = event.target.closest("[data-save]");
+      if (saveButton) { event.stopPropagation(); toggleSaved(Number(saveButton.dataset.save)); return; }
+      const row = event.target.closest("[data-id]");
+      if (row) { selectedId = Number(row.dataset.id); renderList(); if (innerWidth < 1050) document.getElementById("detailPanel").scrollIntoView({behavior:"smooth"}); }
+    });
+    detailEl.addEventListener("click", event => {
+      const saveButton = event.target.closest("[data-save]"); if (saveButton) toggleSaved(Number(saveButton.dataset.save));
+      const copyButton = event.target.closest("[data-copy]"); if (copyButton) copyPitch(Number(copyButton.dataset.copy));
+    });
+    searchEl.addEventListener("input", renderList);
+    sortEl.addEventListener("change", renderList);
+    document.getElementById("exportBtn").addEventListener("click", exportCsv);
+
+    document.getElementById("statTotal").textContent = leads.length;
+    document.getElementById("statHot").textContent = leads.filter(lead => lead.status === "hot").length;
+    document.getElementById("statSite").textContent = leads.filter(lead => !lead.site).length;
+    document.getElementById("statCrm").textContent = leads.filter(lead => lead.crm).length;
+    renderList();
+  </script>
+</body>
+</html>

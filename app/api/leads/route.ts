@@ -1,4 +1,4 @@
-import { CATEGORIES, DEMO_LEADS, type Lead } from "../../data";
+import { CATEGORIES, CITIES, DEMO_LEADS_BY_CITY, type Lead } from "../../data";
 
 type TwoGisItem = {
   id: string;
@@ -48,13 +48,15 @@ function toLead(item: TwoGisItem, index: number): Lead {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as { city?: string; category?: string };
-  const city = body.city?.trim() || "Кызылорда";
+  const requestedCity = body.city?.trim() || "Кызылорда";
+  const city = CITIES.includes(requestedCity as (typeof CITIES)[number]) ? requestedCity as (typeof CITIES)[number] : "Кызылорда";
   const category = CATEGORIES.includes(body.category ?? "") ? body.category! : "Все категории";
   const apiKey = process.env.TWO_GIS_API_KEY;
 
   if (!apiKey) {
-    const leads = category === "Все категории" ? DEMO_LEADS : DEMO_LEADS.filter((lead) => lead.category === category);
-    return Response.json({ leads, source: "demo", city: "Кызылорда" });
+    const cityLeads = DEMO_LEADS_BY_CITY[city];
+    const leads = category === "Все категории" ? cityLeads : cityLeads.filter((lead) => lead.category === category);
+    return Response.json({ leads, source: "demo", city });
   }
 
   try {

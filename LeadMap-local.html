@@ -190,7 +190,7 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">L</div>
-        <div><strong>LeadMap</strong><span>2ГИС · Кызылорда</span></div>
+        <div><strong>LeadMap</strong><span>2ГИС · <span id="brandCity">Кызылорда</span></span></div>
       </div>
       <div class="offline"><span>Локально · без входа</span></div>
     </header>
@@ -201,7 +201,7 @@
         <h1>Бизнесы, которым пора продавать через сайт</h1>
         <p>Приоритетная база компаний из 2ГИС без сайта или с потенциалом внедрения CRM. Откройте карточку точки и сразу напишите владельцу.</p>
         <div class="hero-meta">
-          <span class="tag">Кызылорда</span><span class="tag">Авто · мебель · красота</span><span class="tag">Проверено вручную</span>
+          <span class="tag" id="cityTag">Кызылорда</span><span class="tag">Авто · мебель · красота</span><span class="tag">Проверено вручную</span>
         </div>
       </div>
       <div class="hero-stats">
@@ -213,6 +213,11 @@
     </section>
 
     <section class="toolbar" aria-label="Поиск и экспорт">
+      <select id="city" aria-label="Выберите город">
+        <option>Кызылорда</option>
+        <option>Алматы</option>
+        <option>Астана</option>
+      </select>
       <div class="search"><input id="search" type="search" placeholder="Поиск по компании, категории или адресу…" autocomplete="off"></div>
       <select id="sort" aria-label="Сортировка">
         <option value="score">Сначала перспективные</option>
@@ -250,7 +255,8 @@
   <div class="toast" id="toast" role="status"></div>
 
   <script>
-    const leads = [
+    const leadsByCity = {
+      "Кызылорда": [
       {id:1,name:"AutoMaster",category:"Автосервис",address:"ул. Жалела Кизатова, 24",rating:4.8,reviews:143,score:96,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"77775601717",gis:"https://2gis.kz/kyzylorda/firm/70000001069481314",opportunity:"У вас высокий рейтинг и много отзывов — сайт с онлайн-записью и CRM поможет превратить спрос из 2ГИС в повторные продажи."},
       {id:2,name:"Nns",category:"Салон красоты",address:"ул. Текей батыра, 11Б",rating:4.3,reviews:98,score:94,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"77777020299",gis:"https://2gis.kz/kyzylorda/firm/70000001103644266",opportunity:"Поток отзывов уже подтверждает спрос. Лендинг, онлайн-запись и база клиентов помогут загрузить свободные окна."},
       {id:3,name:"Sultan service",category:"Автосервис",address:"ул. Пушкина, 1",rating:4.8,reviews:80,score:92,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"77710899191",gis:"https://2gis.kz/kyzylorda/firm/70000001063317160",opportunity:"Сильная репутация даёт хороший поток. CRM поможет вести заявки, напоминать о ТО и возвращать клиентов."},
@@ -263,7 +269,27 @@
       {id:10,name:"Khan mebel",category:"Мебель на заказ",address:"ул. Жаппасбай батыра, 54",rating:3.1,reviews:4,score:75,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77770101771",gis:"https://2gis.kz/kyzylorda/firm/70000001088212540",opportunity:"Сайт с реальными кейсами, гарантиями и этапами работы поможет повысить доверие до первого звонка."},
       {id:11,name:"Konis",category:"Мебельный салон",address:"Кызылорда",rating:null,reviews:0,score:73,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77011121980",gis:"https://2gis.kz/kyzylorda/firm/70000001103410170",opportunity:"У компании пока слабый цифровой след. Компактный сайт станет основной точкой доверия и сбора заявок."},
       {id:12,name:"Grace",category:"Салон красоты",address:"ул. Ауэзова, 7а",rating:5.0,reviews:3,score:71,status:"watch",need:"Сайт",site:false,crm:false,whatsapp:"77771163377",gis:"https://2gis.kz/kyzylorda/firm/70000001109985096",opportunity:"Высокая оценка и небольшое число отзывов — хороший момент запустить сайт, запись и системный сбор обратной связи."}
-    ];
+    ],
+      "Алматы": [
+        {id:101,name:"AviAvto",category:"Автосервис",address:"ул. Карасай батыра, 229",rating:4.9,reviews:170,score:96,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/almaty/firm/70000001033899351",opportunity:"Сайт с онлайн-записью и CRM помогут вести историю обслуживания и возвращать клиентов на повторный сервис."},
+        {id:102,name:"СТО Service Auto",category:"Автосервис",address:"ул. Омская, 125а",rating:4.9,reviews:626,score:95,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"",gis:"https://2gis.kz/almaty/firm/9429940000915119",opportunity:"Большой поток обращений стоит собрать в CRM: запись, статусы ремонта и автоматические напоминания."},
+        {id:103,name:"Alma Home",category:"Мебель на заказ",address:"пр. Турара Рыскулова, 143в",rating:5,reviews:264,score:94,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/almaty/firm/70000001084016721",opportunity:"Каталог с квизом на расчёт и CRM помогут обрабатывать заявки по двум филиалам без потерь."},
+        {id:104,name:"Mebelle",category:"Мебель на заказ",address:"ул. Кабдена Байдосова, 2а",rating:5,reviews:25,score:91,status:"hot",need:"Сайт",site:false,crm:false,whatsapp:"",gis:"https://2gis.kz/almaty/firm/70000001040103742",opportunity:"Сайт-портфолио с кейсами, материалами и формой заявки на замер усилит визуальные продажи."},
+        {id:105,name:"The Scort",category:"Салон красоты",address:"ул. Каирбекова, 48",rating:4.9,reviews:38,score:89,status:"hot",need:"Сайт",site:false,crm:false,whatsapp:"",gis:"https://2gis.kz/almaty/firm/70000001102010163",opportunity:"Имиджевый сайт с услугами, работами мастеров и собственной точкой записи повысит доверие."},
+        {id:106,name:"Vivat",category:"Салон красоты",address:"12-й микрорайон, 2",rating:4.6,reviews:40,score:86,status:"warm",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/almaty/firm/70000001025640882",opportunity:"Лендинг с прайсом и CRM помогут вести запись, напоминания и возврат постоянных клиентов."}
+      ],
+      "Астана": [
+        {id:201,name:"Мой шкаф",category:"Мебель на заказ",address:"ул. Александра Пушкина, 40в",rating:4.9,reviews:69,score:94,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001047414690",opportunity:"CRM объединит заявки с сайта и WhatsApp, замеры и производство по двум филиалам."},
+        {id:202,name:"Lineo",category:"Мебель на заказ",address:"ул. Ыкылас Дукенулы, 25/1",rating:5,reviews:43,score:92,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001099074313",opportunity:"Сайт с портфолио кухонь, квизом расчёта и CRM позволит контролировать каждый этап заказа."},
+        {id:203,name:"Linden.kz",category:"Мебель на заказ",address:"ул. Жошы хан, 14/2",rating:5,reviews:32,score:91,status:"hot",need:"CRM",site:true,crm:true,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001087630319",opportunity:"CRM поможет контролировать дизайнерские проекты, сметы, коммуникации и повторные касания."},
+        {id:204,name:"Кукебаев",category:"Мебель на заказ",address:"ул. Михаила Лермонтова, 41Б",rating:5,reviews:30,score:90,status:"hot",need:"Сайт",site:false,crm:false,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001052676266",opportunity:"Сайт-портфолио с калькулятором проекта и заявкой на бесплатный замер усилит поток из поиска."},
+        {id:205,name:"Салон красоты",category:"Салон красоты",address:"пр. Женис, 37",rating:5,reviews:35,score:89,status:"hot",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001094524921",opportunity:"Сайт с меню услуг и CRM помогут вести онлайн-запись, напоминания и загрузку мастеров."},
+        {id:206,name:"Автосервис",category:"Автосервис",address:"ул. Беимбет Майлин, 17",rating:4.5,reviews:40,score:87,status:"warm",need:"Сайт + CRM",site:false,crm:true,whatsapp:"",gis:"https://2gis.kz/astana/firm/70000001029777438",opportunity:"Сайт с перечнем работ и CRM помогут вести запись, статусы ремонта и возврат клиентов на ТО."}
+      ]
+    };
+
+    let currentCity = "Кызылорда";
+    let leads = leadsByCity[currentCity];
 
     let currentFilter = "all";
     let selectedId = leads[0].id;
@@ -272,6 +298,7 @@
     const detailEl = document.getElementById("detail");
     const searchEl = document.getElementById("search");
     const sortEl = document.getElementById("sort");
+    const cityEl = document.getElementById("city");
 
     const escapeHtml = value => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
     const statusLabel = status => ({hot:"Горячий",warm:"Тёплый",watch:"Наблюдение"})[status];
@@ -369,8 +396,18 @@
       const rows = [["Компания","Категория","Адрес","Рейтинг","Отзывы","Приоритет","Потребность","WhatsApp","2ГИС"]];
       filteredLeads().forEach(lead => rows.push([lead.name,lead.category,lead.address,lead.rating ?? "",lead.reviews,lead.score,lead.need,lead.whatsapp ? "+"+lead.whatsapp : "",lead.gis]));
       const csv = "\ufeff" + rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(";")).join("\r\n");
-      const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); link.download = "leadmap-kyzylorda.csv"; link.click(); URL.revokeObjectURL(link.href);
+      const slug = currentCity === "Алматы" ? "almaty" : currentCity === "Астана" ? "astana" : "kyzylorda";
+      const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); link.download = `leadmap-${slug}.csv`; link.click(); URL.revokeObjectURL(link.href);
       showToast("CSV-файл подготовлен");
+    }
+
+    function renderStats() {
+      document.getElementById("statTotal").textContent = leads.length;
+      document.getElementById("statHot").textContent = leads.filter(lead => lead.status === "hot").length;
+      document.getElementById("statSite").textContent = leads.filter(lead => !lead.site).length;
+      document.getElementById("statCrm").textContent = leads.filter(lead => lead.crm).length;
+      document.getElementById("brandCity").textContent = currentCity;
+      document.getElementById("cityTag").textContent = currentCity;
     }
 
     document.querySelector(".filters").addEventListener("click", event => {
@@ -391,12 +428,20 @@
     });
     searchEl.addEventListener("input", renderList);
     sortEl.addEventListener("change", renderList);
+    cityEl.addEventListener("change", () => {
+      currentCity = cityEl.value;
+      leads = leadsByCity[currentCity];
+      selectedId = leads[0].id;
+      currentFilter = "all";
+      searchEl.value = "";
+      document.querySelectorAll(".filter").forEach(item => item.classList.toggle("active", item.dataset.filter === "all"));
+      renderStats();
+      renderList();
+      showToast(`${currentCity}: ${leads.length} лидов`);
+    });
     document.getElementById("exportBtn").addEventListener("click", exportCsv);
 
-    document.getElementById("statTotal").textContent = leads.length;
-    document.getElementById("statHot").textContent = leads.filter(lead => lead.status === "hot").length;
-    document.getElementById("statSite").textContent = leads.filter(lead => !lead.site).length;
-    document.getElementById("statCrm").textContent = leads.filter(lead => lead.crm).length;
+    renderStats();
     renderList();
   </script>
 </body>

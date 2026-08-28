@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CATEGORIES, DEMO_LEADS, type Lead } from "./data";
+import { CATEGORIES, CITIES, DEMO_LEADS, type Lead } from "./data";
 
 type Filter = "Все" | "Горячие" | "Нужен сайт" | "Нужна CRM" | "Сохранённые";
 const FILTERS: Filter[] = ["Все", "Горячие", "Нужен сайт", "Нужна CRM", "Сохранённые"];
@@ -69,11 +69,7 @@ export function LeadRadar() {
       setSource(data.source ?? "demo");
       setSelectedId(data.leads[0]?.id ?? "");
       setFilter("Все");
-      if (data.source === "demo" && city.toLowerCase() !== "кызылорда") {
-        setToast("Демо-выборка пока доступна для Кызылорды");
-      } else {
-        setToast(`Найдено лидов: ${data.leads.length}`);
-      }
+      setToast(`${data.city ?? city}: найдено лидов — ${data.leads.length}`);
     } catch (error) {
       setToast(error instanceof Error ? error.message : "Не удалось обновить лиды");
     } finally {
@@ -145,7 +141,7 @@ export function LeadRadar() {
           </section>
 
           <section className="search-rig" aria-label="Параметры поиска">
-            <label className="control"><span className="control-label">Город / регион</span><input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Например, Алматы" /></label>
+            <label className="control"><span className="control-label">Город / регион</span><select value={city} onChange={(event) => setCity(event.target.value)}>{CITIES.map((item) => <option key={item}>{item}</option>)}</select></label>
             <label className="control"><span className="control-label">Ниша</span><select value={category} onChange={(event) => setCategory(event.target.value)}>{CATEGORIES.map((item) => <option key={item}>{item}</option>)}</select></label>
             <button className="search-button" onClick={runSearch} disabled={loading}>{loading ? "Сканируем…" : "Найти лиды →"}</button>
           </section>

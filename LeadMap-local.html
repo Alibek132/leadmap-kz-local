@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Локальный радар потенциальных клиентов из 2ГИС по Кызылорде">
+  <meta name="description" content="Автономный радар потенциальных клиентов из 2ГИС по Алматы и Астане">
   <title>LeadMap — лиды из 2ГИС</title>
   <style>
     :root {
@@ -190,9 +190,9 @@
     <header class="topbar">
       <div class="brand">
         <div class="brand-mark">L</div>
-        <div><strong>LeadMap</strong><span>2ГИС · <span id="brandCity">Кызылорда</span></span></div>
+        <div><strong>LeadMap</strong><span>2ГИС · <span id="brandCity">Алматы</span></span></div>
       </div>
-      <div class="offline"><span>Локально · без входа</span></div>
+      <div class="offline"><span>GitHub Pages · без входа</span></div>
     </header>
 
     <section class="hero">
@@ -201,11 +201,11 @@
         <h1>Бизнесы, которым пора продавать через сайт</h1>
         <p>Приоритетная база компаний из 2ГИС без сайта или с потенциалом внедрения CRM. Откройте карточку точки и сразу напишите владельцу.</p>
         <div class="hero-meta">
-          <span class="tag" id="cityTag">Кызылорда</span><span class="tag">Авто · мебель · красота</span><span class="tag">Проверено вручную</span>
+          <span class="tag" id="cityTag">Алматы</span><span class="tag">Авто · мебель · красота · стоматологии</span><span class="tag" id="updatedTag">Обновлено сейчас</span>
         </div>
       </div>
       <div class="hero-stats">
-        <div class="stat primary"><span>Найдено лидов</span><strong id="statTotal">12</strong></div>
+        <div class="stat primary"><span>Найдено лидов</span><strong id="statTotal">16</strong></div>
         <div class="stat"><span>Горячие</span><strong id="statHot">6</strong></div>
         <div class="stat"><span>Без сайта</span><strong id="statSite">9</strong></div>
         <div class="stat"><span>Нужна CRM</span><strong id="statCrm">5</strong></div>
@@ -214,7 +214,6 @@
 
     <section class="toolbar" aria-label="Поиск и экспорт">
       <select id="city" aria-label="Выберите город">
-        <option>Кызылорда</option>
         <option>Алматы</option>
         <option>Астана</option>
       </select>
@@ -224,6 +223,7 @@
         <option value="rating">По рейтингу</option>
         <option value="reviews">По отзывам</option>
       </select>
+      <button class="btn" id="refreshBtn" type="button">↻ Обновить базу</button>
       <button class="btn" id="exportBtn" type="button">↓ Экспорт CSV</button>
     </section>
 
@@ -288,8 +288,79 @@
       ]
     };
 
-    let currentCity = "Кызылорда";
-    let leads = leadsByCity[currentCity];
+    const currentLeadPool = {
+      "Алматы": [
+        ["70000001094187683","Real Service Mercedes","Автосервис","ул. Минусинская, 17",5,221],
+        ["70000001066266006","Геликон","Автосервис","ул. Абиша Кекилбайулы, 171а",4.8,178],
+        ["70000001019247787","GT oil service","Автосервис","ул. Тлендиева, 377а",4.9,2220],
+        ["70000001019930149","EXPERT OIL SERVICE","Автосервис","ул. Рыскулбекова, 43а",5,195],
+        ["70000001104927985","AutoPapa","Автосервис","ул. Зеина Шашкина, 29",5,44],
+        ["70000001081999536","Cozy lab","Салон красоты","пр. Гагарина, 124",4.7,388],
+        ["70000001040596963","Nogti Mania","Салон красоты","пр. Сейфуллина, 412",4.8,682],
+        ["9429940001464980","Star Nails","Салон красоты","пр. Абая, 109а",4.9,353],
+        ["70000001052550085","Incanto","Салон красоты","ул. Сеченова, 30/8",4.9,218],
+        ["70000001109698727","Velara","Салон красоты","пр. Назарбаева, 226",4.8,61],
+        ["70000001059928053","Deniskhan-Mebel","Мебель на заказ","ул. Заветная, 33",5,14],
+        ["70000001039438535","Акниет","Мебель на заказ","пр. Райымбека, 92",4.9,44],
+        ["70000001106092699","РаспилПро","Мебель на заказ","ул. Казакова, 2",5,2],
+        ["70000001024249369","Тана-Жиһаз","Мебель на заказ","Первомайская промзона, 288Б",4.5,6],
+        ["9429940001129178","Mebel Service Center","Мебель на заказ","ул. Кудерина, 65Б",4.5,16],
+        ["70000001050755430","Bilal stom","Стоматология","ул. Манаса, 75",4.9,645],
+        ["70000001075802347","Smilex Dental Center","Стоматология","ул. Карасай батыра, 178",5,228],
+        ["70000001032980710","Стоматология Dr. Yerzhana Musagalieva","Стоматология","ул. Шевченко, 51",5,475],
+        ["70000001028699803","Центр цифровой стоматологии Dr. Edil Boribay","Стоматология","ул. Розыбакиева, 247, блок 4",4.9,931],
+        ["70000001095046199","Hayat dental clinic","Стоматология","ул. Казыбек би, 125/1",5,488]
+      ],
+      "Астана": [
+        ["70000001066224474","Tez Auto","Автосервис","пр. Абылай хана, 60/1",4.8,1270],
+        ["70000001041616687","VN SERVICE","Автосервис","пр. Акжол, 52/1",4.8,204],
+        ["70000001020455749","Jaguar Land Rover Astana","Автосервис","ш. Коргалжын, 7а",5,166],
+        ["70000001025144629","Тойота Сити Астана","Автосервис","пр. Туран, 76",4.9,1169],
+        ["70000001093944571","У Беки","Автосервис","ул. Сарын, 30",4.8,95],
+        ["70000001019547551","DINARA MYNBAI","Салон красоты","пр. Абылай хана, 34",4.8,4208],
+        ["70000001018072665","Sakura","Салон красоты","ул. Шолпан Иманбаевой, 9",4.9,934],
+        ["70000001080878406","Soldi","Салон красоты","ул. Санжара Асфендиярова, 2",4.9,1166],
+        ["70000001040046215","Pro balance spa","Салон красоты","ул. Саргуль, 11",4.9,668],
+        ["70000001105780297","In Beauty","Салон красоты","пр. Туран, 55",4.9,409],
+        ["70000001110524932","Mebelux","Мебель на заказ","пр. Улы Дала, 33",4.8,23],
+        ["70000001102549708","Qazaq.furniture","Мебель на заказ","трасса Астана — Караганда, 19Б",4.9,94],
+        ["70000001099074313","Lineo","Мебель на заказ","ул. Ыкылас Дукенулы, 25/1",5,29],
+        ["70000001112388008","MK Diana","Мебель на заказ","ул. Бактыораза Бейсекбаева, 28/9",4.8,20],
+        ["70000001059262295","4 Ағайынды","Мебель на заказ","пер. Аксумбе, 8а",4.8,82],
+        ["70000001069280429","Lucky dental arts","Стоматология","пр. Туран, 55/10",5,450],
+        ["70000001115306814","S-Dental","Стоматология","пр. Мангилик Ел, 41/3",5,13],
+        ["70000001096966204","Ais Dent","Стоматология","ул. Степана Кубрина, 20/1",4.9,322],
+        ["70000001046463087","rembrand","Стоматология","пр. Сарыарка, 18",5,275],
+        ["70000001060073053","Sabber","Стоматология","ул. Бейбитшилик, 67",4.9,437]
+      ]
+    };
+
+    const citySlug = city => city === "Алматы" ? "almaty" : "astana";
+    const opportunityFor = category => ({
+      "Автосервис":"Онлайн-запись, история обслуживания и CRM-напоминания помогут возвращать клиентов на повторное ТО.",
+      "Салон красоты":"Онлайн-бронирование, портфолио мастеров и напоминания помогут загрузить свободные окна.",
+      "Мебель на заказ":"Сайт-портфолио с квизом расчёта поможет получать больше заявок на замер.",
+      "Стоматология":"Сайт услуг с онлайн-записью и напоминаниями поможет увеличить число повторных приёмов."
+    })[category];
+    const makeLead = (city, [id,name,category,address,rating,reviews]) => {
+      const score = Math.min(98, Math.round(58 + rating * 4 + Math.min(reviews / 25, 20)));
+      const need = reviews >= 150 ? "Сайт + CRM" : reviews >= 60 ? "CRM" : "Сайт";
+      return {id,name,category,address,rating,reviews,score,status:score >= 89 ? "hot" : score >= 80 ? "warm" : "watch",need,site:!need.includes("Сайт"),crm:need.includes("CRM"),whatsapp:"",gis:`https://2gis.kz/${citySlug(city)}/firm/${id}`,opportunity:opportunityFor(category)};
+    };
+    Object.keys(currentLeadPool).forEach(city => { leadsByCity[city] = currentLeadPool[city].map(item => makeLead(city,item)); });
+    delete leadsByCity["Кызылорда"];
+
+    function freshSelection(city) {
+      const pool = [...leadsByCity[city]];
+      for (let index = pool.length - 1; index > 0; index--) {
+        const next = Math.floor(Math.random() * (index + 1));
+        [pool[index],pool[next]] = [pool[next],pool[index]];
+      }
+      return pool.slice(0,16);
+    }
+
+    let currentCity = "Алматы";
+    let leads = freshSelection(currentCity);
 
     let currentFilter = "all";
     let selectedId = leads[0].id;
@@ -396,7 +467,7 @@
       const rows = [["Компания","Категория","Адрес","Рейтинг","Отзывы","Приоритет","Потребность","WhatsApp","2ГИС"]];
       filteredLeads().forEach(lead => rows.push([lead.name,lead.category,lead.address,lead.rating ?? "",lead.reviews,lead.score,lead.need,lead.whatsapp ? "+"+lead.whatsapp : "",lead.gis]));
       const csv = "\ufeff" + rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(";")).join("\r\n");
-      const slug = currentCity === "Алматы" ? "almaty" : currentCity === "Астана" ? "astana" : "kyzylorda";
+      const slug = citySlug(currentCity);
       const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"})); link.download = `leadmap-${slug}.csv`; link.click(); URL.revokeObjectURL(link.href);
       showToast("CSV-файл подготовлен");
     }
@@ -408,6 +479,7 @@
       document.getElementById("statCrm").textContent = leads.filter(lead => lead.crm).length;
       document.getElementById("brandCity").textContent = currentCity;
       document.getElementById("cityTag").textContent = currentCity;
+      document.getElementById("updatedTag").textContent = `Обновлено ${new Intl.DateTimeFormat("ru-KZ",{hour:"2-digit",minute:"2-digit"}).format(new Date())}`;
     }
 
     document.querySelector(".filters").addEventListener("click", event => {
@@ -418,19 +490,19 @@
     });
     listEl.addEventListener("click", event => {
       const saveButton = event.target.closest("[data-save]");
-      if (saveButton) { event.stopPropagation(); toggleSaved(Number(saveButton.dataset.save)); return; }
+      if (saveButton) { event.stopPropagation(); toggleSaved(saveButton.dataset.save); return; }
       const row = event.target.closest("[data-id]");
-      if (row) { selectedId = Number(row.dataset.id); renderList(); if (innerWidth < 1050) document.getElementById("detailPanel").scrollIntoView({behavior:"smooth"}); }
+      if (row) { selectedId = row.dataset.id; renderList(); if (innerWidth < 1050) document.getElementById("detailPanel").scrollIntoView({behavior:"smooth"}); }
     });
     detailEl.addEventListener("click", event => {
-      const saveButton = event.target.closest("[data-save]"); if (saveButton) toggleSaved(Number(saveButton.dataset.save));
-      const copyButton = event.target.closest("[data-copy]"); if (copyButton) copyPitch(Number(copyButton.dataset.copy));
+      const saveButton = event.target.closest("[data-save]"); if (saveButton) toggleSaved(saveButton.dataset.save);
+      const copyButton = event.target.closest("[data-copy]"); if (copyButton) copyPitch(copyButton.dataset.copy);
     });
     searchEl.addEventListener("input", renderList);
     sortEl.addEventListener("change", renderList);
     cityEl.addEventListener("change", () => {
       currentCity = cityEl.value;
-      leads = leadsByCity[currentCity];
+      leads = freshSelection(currentCity);
       selectedId = leads[0].id;
       currentFilter = "all";
       searchEl.value = "";
@@ -438,6 +510,13 @@
       renderStats();
       renderList();
       showToast(`${currentCity}: ${leads.length} лидов`);
+    });
+    document.getElementById("refreshBtn").addEventListener("click", () => {
+      leads = freshSelection(currentCity);
+      selectedId = leads[0].id;
+      renderStats();
+      renderList();
+      showToast(`${currentCity}: база обновлена`);
     });
     document.getElementById("exportBtn").addEventListener("click", exportCsv);
 
